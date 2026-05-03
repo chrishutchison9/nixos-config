@@ -40,9 +40,13 @@
       command = "nil"
       args = ["--stdio"]
       config = { nix = { maxMemoryMB = 1000 } }
+      [language-server.nixd]
+      command = "nixd"
+      args = ["--stdio"]
+      config = { }
       [[language]]
       name = "nix"
-      formatter = { command = "nixfmt", args = [] }
+      formatter = { command = "nixd", args = [] }
     '';
     programs.helix = {
       enable = true;
