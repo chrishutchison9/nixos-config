@@ -1,9 +1,18 @@
-{ inputs, lib, ... }: {
-  imports = with inputs.self.nixosModules; with inputs.self.nixosProfiles; [
-    inputs.self.nixosRoles.base
-    helix
-    direnv
-  ];
+{ inputs, lib, config, ... }:
+{
+  imports =
+    with inputs.self.nixosModules;
+    with inputs.self.nixosProfiles;
+    [
+      inputs.self.nixosRoles.base
+      helix
+      direnv
+    ];
+  home-manager.users.balsoft = {
+    home.uid = lib.mkForce 1024;
+
+  };
+  home-manager.backupFileExtension = ".hm-bkp";
 
   nix.nrBuildUsers = lib.mkForce 16;
 

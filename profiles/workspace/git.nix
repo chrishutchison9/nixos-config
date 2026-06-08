@@ -3,7 +3,7 @@
     git = {
       enable = true;
       settings = {
-        user.email = "balsoft@balsoft.ru";
+        user.email = "balsoft@balsoft.eu";
         user.name = "Alexander Bantyev";
         pull.rebase = true;
       };

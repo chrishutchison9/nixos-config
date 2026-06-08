@@ -1,6 +1,5 @@
 {
-  description =
-    "A collection of crap, hacks and copy-paste to make my localhosts boot";
+  description = "A collection of crap, hacks and copy-paste to make my localhosts boot";
 
   nixConfig.substituters = [ "https://cache.nixos.org" ];
 
@@ -50,7 +49,9 @@
       flake = false;
     };
 
-    nix-direnv = { url = "github:nix-community/nix-direnv"; };
+    nix-direnv = {
+      url = "github:nix-community/nix-direnv";
+    };
 
     flake-registry = {
       url = "github:nixos/flake-registry";
@@ -66,54 +67,80 @@
     autofirma-nix.url = "github:balsoft/autofirma-nix/autofirma-freeform-config";
   };
 
-  outputs = { nixpkgs, self, deploy-rs, ... }@inputs:
+  outputs =
+    {
+      nixpkgs,
+      self,
+      deploy-rs,
+      ...
+    }@inputs:
     let
-      findModules = dir:
-        builtins.concatLists (builtins.attrValues (builtins.mapAttrs
-          (name: type:
-            if type == "regular" then [{
-              name = builtins.elemAt (builtins.match "(.*)\\.nix" name) 0;
-              value = dir + "/${name}";
-            }] else if (builtins.readDir (dir + "/${name}"))
-            ? "default.nix" then [{
-              inherit name;
-              value = dir + "/${name}";
-            }] else
-              findModules (dir + "/${name}")) (builtins.readDir dir)));
-      pkgsFor = system:
+      findModules =
+        dir:
+        builtins.concatLists (
+          builtins.attrValues (
+            builtins.mapAttrs (
+              name: type:
+              if type == "regular" then
+                [
+                  {
+                    name = builtins.elemAt (builtins.match "(.*)\\.nix" name) 0;
+                    value = dir + "/${name}";
+                  }
+                ]
+              else if (builtins.readDir (dir + "/${name}")) ? "default.nix" then
+                [
+                  {
+                    inherit name;
+                    value = dir + "/${name}";
+                  }
+                ]
+              else
+                findModules (dir + "/${name}")
+            ) (builtins.readDir dir)
+          )
+        );
+      pkgsFor =
+        system:
         import inputs.nixpkgs {
           overlays = [ self.overlay ];
           localSystem = { inherit system; };
           config = {
             android_sdk.accept_license = true;
-            permittedInsecurePackages = [ "openssl-1.1.1v" "olm-3.2.16" ];
+            permittedInsecurePackages = [
+              "openssl-1.1.1v"
+              "olm-3.2.16"
+            ];
             allowUnfreePredicate = (pkg: pkg.pname or null == "firmware-imx");
             allowlistedLicenses = with inputs.nixpkgs.lib.licenses; [ epson ];
           };
         };
-    in {
+    in
+    {
       nixosModules = builtins.listToAttrs (findModules ./modules);
 
       nixosProfiles = builtins.listToAttrs (findModules ./profiles);
 
       nixosRoles = import ./roles;
 
-      nixosConfigurations = with nixpkgs.lib;
+      nixosConfigurations =
+        with nixpkgs.lib;
         let
           hosts = builtins.attrNames (builtins.readDir ./machines);
 
-          mkHost = name:
+          mkHost =
+            name:
             let
               system = builtins.readFile (./machines + "/${name}/system");
               pkgs = pkgsFor system;
-            in nixosSystem {
+            in
+            nixosSystem {
               inherit system;
               modules = __attrValues self.nixosModules ++ [
                 inputs.home-manager.nixosModules.home-manager
 
                 {
-                  disabledModules =
-                    [ "services/x11/desktop-managers/plasma5.nix" ];
+                  disabledModules = [ "services/x11/desktop-managers/plasma5.nix" ];
                 }
 
                 (import (./machines + "/${name}"))
@@ -122,7 +149,8 @@
               ];
               specialArgs = { inherit inputs; };
             };
-        in genAttrs hosts mkHost;
+        in
+        genAttrs hosts mkHost;
 
       legacyPackages.x86_64-linux = pkgsFor "x86_64-linux";
 
@@ -132,7 +160,8 @@
 
       lib = import ./lib.nix nixpkgs.lib;
 
-      devShell.x86_64-linux = with nixpkgs.legacyPackages.x86_64-linux;
+      devShell.x86_64-linux =
+        with nixpkgs.legacyPackages.x86_64-linux;
         mkShell {
           buildInputs = [
             nix
@@ -167,19 +196,34 @@
 
       deploy = {
         user = "root";
-        nodes = (builtins.mapAttrs (name: machine:
-          let activateable = name == "T420-Laptop" || name == "RasPi-Server";
-          in {
-            hostname = machine.config.networking.hostName;
-            profiles.system = {
-              user = if activateable then "root" else "balsoft";
-              path = with deploy-rs.lib.${machine.pkgs.system}.activate;
-                if activateable then
-                  nixos machine
-                else
-                  noop machine.config.system.build.toplevel;
+        nodes =
+          (builtins.mapAttrs (
+            name: machine:
+            let
+              activateable = name == "T420-Laptop" || name == "RasPi-Server";
+            in
+            {
+              hostname = machine.config.networking.hostName;
+              profiles.system = {
+                user = if activateable then "root" else "balsoft";
+                path =
+                  with deploy-rs.lib.${machine.pkgs.system}.activate;
+                  if activateable then nixos machine else noop machine.config.system.build.toplevel;
+              };
+            }
+          ) self.nixosConfigurations)
+          // {
+            server = {
+              sshUser = "balsoft";
+              hostname = "build01.tweag.io";
+              profiles.home-manager-balsoft = {
+                user = "balsoft";
+                path =
+                  with deploy-rs.lib.x86_64-linux.activate;
+                  home-manager self.nixosConfigurations.server.config.home-manager.users.balsoft.home;
+              };
             };
-          }) self.nixosConfigurations);
+          };
       };
     };
 }

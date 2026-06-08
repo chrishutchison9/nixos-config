@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }: {
 
   secrets.nextcloud = {
-    encrypted = "${config.secretsConfig.password-store}/nextcloud.balsoft.ru/balsoft.gpg";
+    encrypted = "${config.secretsConfig.password-store}/nextcloud.balsoft.eu/balsoft.gpg";
     services = [ "home-manager-balsoft" ];
     owner = "balsoft:users";
   };
@@ -12,7 +12,7 @@
       remotes.nextcloud = {
         config = {
           type = "webdav";
-          url = "https://nextcloud.balsoft.ru/remote.php/dav/files/balsoft";
+          url = "https://nextcloud.balsoft.eu/remote.php/dav/files/balsoft";
           vendor = "nextcloud";
           user = "balsoft";
         };
@@ -21,7 +21,7 @@
         };
         mounts."" = {
           enable = true;
-          mountPoint = "/home/balsoft/cloud/nextcloud.balsoft.ru";
+          mountPoint = "/home/balsoft/cloud/nextcloud.balsoft.eu";
           options = {
             vfs-cache-mode = "full";
           };

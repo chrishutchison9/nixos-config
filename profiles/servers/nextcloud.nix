@@ -7,7 +7,7 @@
 {
   services.nextcloud = {
     enable = true;
-    hostName = "nextcloud.balsoft.ru";
+    hostName = "nextcloud.balsoft.eu";
     config.adminpassFile = config.secrets.nextcloud.decrypted;
     config.dbtype = "sqlite";
     package = pkgs.nextcloud33;
@@ -18,16 +18,16 @@
       "memories.vod.ffmpeg" = "${lib.getExe pkgs.ffmpeg-headless}";
       "memories.vod.ffprobe" = "${pkgs.ffmpeg-headless}/bin/ffprobe";
     };
-    phpExtraExtensions = all: [
-      ((all.pdlib.override { dlib = (pkgs.dlib.override { blas = pkgs.openblas; }); }).overrideAttrs
-        (oa: {
-          buildInputs = oa.buildInputs ++ [
-            pkgs.openblas
-            pkgs.liblapack
-          ];
-        })
-      )
-    ];
+    # phpExtraExtensions = all: [
+      # ((all.pdlib.override { dlib = (pkgs.dlib.override { blas = pkgs.openblas; }); }).overrideAttrs
+      #   (oa: {
+      #     buildInputs = oa.buildInputs ++ [
+      #       pkgs.openblas
+      #       pkgs.liblapack
+      #     ];
+      #   })
+      # )
+    # ];
   };
   services.phpfpm.pools.nextcloud.phpEnv.PATH =
     lib.mkForce "/run/wrappers/bin:${pkgs.ffmpeg-headless}/bin:${pkgs.exiftool}/bin:${pkgs.perl}/bin:/usr/bin:/bin";
@@ -35,7 +35,7 @@
     owner = "nextcloud:nextcloud";
     services = [ "nextcloud-setup" ];
   };
-  services.nginx.virtualHosts."nextcloud.balsoft.ru" = {
+  services.nginx.virtualHosts."nextcloud.balsoft.eu" = {
     enableACME = true;
     forceSSL = true;
     locations."/".proxyWebsockets = true;

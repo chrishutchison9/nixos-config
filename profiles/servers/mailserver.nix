@@ -1,6 +1,14 @@
-{ pkgs, config, lib, inputs, ... }:
-let module = toString inputs.simple-nixos-mailserver;
-in {
+{
+  pkgs,
+  config,
+  lib,
+  inputs,
+  ...
+}:
+let
+  module = toString inputs.simple-nixos-mailserver;
+in
+{
   imports = [ module ];
   secrets.mailserver = {
     owner = "dovecot2:dovecot2";
@@ -67,80 +75,89 @@ in {
       # "zombie.dnsbl.sorbs.net"
     ];
     dnsBlacklistOverrides = ''
-      balsoft.ru OK
+      balsoft.eu OK
       192.168.0.0/16 OK
-      ${lib.concatMapStringsSep "\n" (machine: "${machine}.lan OK")
-      (builtins.attrNames inputs.self.nixosConfigurations)}
+      ${lib.concatMapStringsSep "\n" (machine: "${machine}.lan OK") (
+        builtins.attrNames inputs.self.nixosConfigurations
+      )}
     '';
   };
   services.dovecot2 = {
-    mailPlugins.globally.enable = [ "virtual" ];
-    extraConfig = ''
-      namespace {
-        prefix = virtual.
-        separator = .
-        location = virtual:~/Maildir/virtual
-      }
-    '';
+    # mailPlugins.globally.enable = [ "virtual" ];
+    settings = {
+      mail_plugins.virtual = true;
+      "namespace virtual" = {
+        prefix = "virtual.";
+        separator = ".";
+        mail_driver = "virtual";
+        mail_path = "virtual:~/Maildir/virtual";
+        mailbox_list_layout = "fs";
+        mailbox_list_index_prefix = "virtual";
+      };
+    };
+    #  = ''
+    #   namespace {
+    #     prefix = virtual.
+    #     separator = .
+    #     location = virtual:~/Maildir/virtual
+    #   }
+    # '';
   };
   systemd.tmpfiles.rules = [
-    "d /var/vmail/balsoft.ru/balsoft/Maildir 700 virtualMail virtualMail - -"
-    "d /var/vmail/balsoft.ru/balsoft/Maildir/virtual 700 virtualMail virtualMail - -"
-    "d /var/vmail/balsoft.ru/balsoft/Maildir/virtual/all 700 virtualMail virtualMail - -"
-    "d /var/vmail/balsoft.ru/balsoft/Maildir/virtual/INBOX 700 virtualMail virtualMail - -"
-    "L+ /var/vmail/balsoft.ru/balsoft/Maildir/virtual/all/dovecot-virtual - - - - ${
-      pkgs.writeText "virtual.all" ''
-        INBOX
-        Sent
-        Drafts
-          all
-        *
-          unseen
-      ''
-    }"
-    "L+ /var/vmail/balsoft.ru/balsoft/Maildir/virtual/INBOX/dovecot-virtual - - - - ${
-      pkgs.writeText "virtual.INBOX" ''
-        virtual.all
-          inthread refs x-mailbox INBOX
-      ''
-    }"
+    "d /var/vmail/balsoft.eu/balsoft/Maildir 700 virtualMail virtualMail - -"
+    "d /var/vmail/balsoft.eu/balsoft/Maildir/virtual 700 virtualMail virtualMail - -"
+    "d /var/vmail/balsoft.eu/balsoft/Maildir/virtual/all 700 virtualMail virtualMail - -"
+    "d /var/vmail/balsoft.eu/balsoft/Maildir/virtual/INBOX 700 virtualMail virtualMail - -"
+    "L+ /var/vmail/balsoft.eu/balsoft/Maildir/virtual/all/dovecot-virtual - - - - ${pkgs.writeText "virtual.all" ''
+      INBOX
+      Sent
+      Drafts
+        all
+      *
+        unseen
+    ''}"
+    "L+ /var/vmail/balsoft.eu/balsoft/Maildir/virtual/INBOX/dovecot-virtual - - - - ${pkgs.writeText "virtual.INBOX" ''
+      virtual.all
+        inthread refs x-mailbox INBOX
+    ''}"
   ];
   mailserver = {
     enable = true;
     stateVersion = 3;
-    fqdn = "balsoft.ru";
-    domains = [ "balsoft.ru" ];
+    fqdn = "balsoft.eu";
+    domains = [ "balsoft.eu" "balsoft.ru" ];
     mailboxes = {
       Trash = {
         auto = "no";
-        specialUse = "Trash";
+        special_use = "Trash";
       };
       Junk = {
         auto = "subscribe";
-        specialUse = "Junk";
+        special_use = "\\Junk";
       };
       Drafts = {
         auto = "subscribe";
-        specialUse = "Drafts";
+        special_use = "Drafts";
       };
       Sent = {
         auto = "subscribe";
-        specialUse = "Sent";
+        special_use = "Sent";
       };
     };
     loginAccounts = {
-      "balsoft@balsoft.ru" = {
+      "balsoft@balsoft.eu" = {
         aliases = [
           "balsoft"
-          "admin@balsoft.ru"
+          "admin@balsoft.eu"
+          "balsoft@balsoft.ru"
           "patches"
-          "patches@balsoft.ru"
+          "patches@balsoft.eu"
           "issues"
-          "issues@balsoft.ru"
+          "issues@balsoft.eu"
           "admin"
-          "root@balsoft.ru"
+          "root@balsoft.eu"
           "root"
-          "paypal@balsoft.ru"
+          "paypal@balsoft.eu"
           "paypal"
         ];
         hashedPasswordFile = config.secrets.mailserver.decrypted;
@@ -151,14 +168,14 @@ in {
           }
         '';
       };
-      "mastodon@balsoft.ru" = {
+      "mastodon@balsoft.eu" = {
         aliases = [ "mastodon" ];
         hashedPasswordFile = config.secrets.mailserver-mastodon.decrypted;
       };
     };
     localDnsResolver = false;
-    certificateFile = "/var/lib/acme/balsoft.ru/fullchain.pem";
-    keyFile = "/var/lib/acme/balsoft.ru/key.pem";
+    certificateFile = "/var/lib/acme/balsoft.eu/fullchain.pem";
+    keyFile = "/var/lib/acme/balsoft.eu/key.pem";
     enableImap = true;
     enableImapSsl = true;
     virusScanning = false;

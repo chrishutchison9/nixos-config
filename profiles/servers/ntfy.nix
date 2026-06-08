@@ -3,7 +3,7 @@
   services.ntfy-sh = {
     enable = true;
     settings = {
-      base-url = "https://ntfy.balsoft.ru";
+      base-url = "https://ntfy.balsoft.eu";
       listen-http = "localhost:8111";
       behind-proxy = true;
       enable-login = true;
@@ -13,7 +13,7 @@
 
   secrets.ntfy_password = { owner = "nginx:nginx"; };
 
-  services.nginx.virtualHosts."ntfy.balsoft.ru" = {
+  services.nginx.virtualHosts."ntfy.balsoft.eu" = {
     enableACME = true;
     forceSSL = true;
 

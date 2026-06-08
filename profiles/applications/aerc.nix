@@ -201,12 +201,12 @@
         aerc.enable = true;
         aerc.extraBinds.messages.d = ":move ${folders.trash}<Enter>";
         realName = "Alexander Bantyev";
-        address = "balsoft@balsoft.ru";
-        imap.host = "balsoft.ru";
-        smtp.host = "balsoft.ru";
+        address = "balsoft@balsoft.eu";
+        imap.host = "balsoft.eu";
+        smtp.host = "balsoft.eu";
 
-        userName = "balsoft@balsoft.ru";
-        passwordCommand = "pass email/balsoft@balsoft.ru";
+        userName = "balsoft@balsoft.eu";
+        passwordCommand = "pass email/balsoft@balsoft.eu";
 
         folders.inbox = "virtual.all";
         folders.trash = "Trash";

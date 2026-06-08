@@ -8,62 +8,86 @@ let
   livekitKeyFile = "/run/livekit.key";
 in
 {
-  services.matrix-synapse = {
+  # services.matrix-synapse = {
+  #   enable = true;
+  #   settings = {
+  #     allow_guest_access = false;
+  #     listeners = [
+  #       {
+  #         # bind_address = "0.0.0.0";
+  #         port = 13748;
+  #         resources = [
+  #           {
+  #             compress = true;
+  #             names = [ "client" ];
+  #           }
+  #           {
+  #             compress = false;
+  #             names = [ "federation" ];
+  #           }
+  #         ];
+  #         type = "http";
+  #         tls = false;
+  #         x_forwarded = true;
+  #       }
+  #     ];
+  #     public_baseurl = "https://balsoft.ru";
+  #     server_name = "balsoft.ru";
+  #     turn_uris = [
+  #       "turn:balsoft.ru:3478?transport=udp"
+  #       "turn:balsoft.ru:3478?transport=tcp"
+  #     ];
+  #     # app_service_config_files =
+  #     #   [ config.secrets-envsubst.mautrix-telegram-registration.substituted ];
+  #     allow_public_rooms_over_federation = true;
+  #     media_retention.remote_media_lifetime = "14d";
+
+  #     auto_accept_invites.only_from_local_users = true;
+
+  #     experimental_features = {
+  #       # MSC3266: Room summary API. Used for knocking over federation
+  #       msc3266_enabled = true;
+  #       # MSC4222: needed for syncv2 state_after. This allows clients to
+  #       # correctly track the state of the room.
+  #       msc4222_enabled = true;
+  #       # MSC4140: Delayed events are required for proper call participation signalling. If disabled it is very likely that you end up with stuck calls in Matrix rooms
+  #       msc4140_enabled = true;
+  #     };
+
+  #     max_event_delay_duration = "24h";
+  #   };
+  #   extraConfigFiles = [
+  #     config.secrets-envsubst.coturn.substituted
+  #     config.secrets-envsubst.matrix.substituted
+  #   ];
+  # };
+
+  # services.postgresql.enable = true;
+  # services.postgresql.package = pkgs.postgresql_15;
+
+  services.matrix-continuwuity = {
     enable = true;
     settings = {
-      allow_guest_access = false;
-      listeners = [
-        {
-          # bind_address = "0.0.0.0";
-          port = 13748;
-          resources = [
-            {
-              compress = true;
-              names = [ "client" ];
-            }
-            {
-              compress = false;
-              names = [ "federation" ];
-            }
-          ];
-          type = "http";
-          tls = false;
-          x_forwarded = true;
-        }
-      ];
-      public_baseurl = "https://balsoft.ru";
-      server_name = "balsoft.ru";
-      turn_uris = [
-        "turn:balsoft.ru:3478?transport=udp"
-        "turn:balsoft.ru:3478?transport=tcp"
-      ];
-      # app_service_config_files =
-      #   [ config.secrets-envsubst.mautrix-telegram-registration.substituted ];
-      allow_public_rooms_over_federation = true;
-      media_retention.remote_media_lifetime = "14d";
-
-      auto_accept_invites.only_from_local_users = true;
-
-      experimental_features = {
-        # MSC3266: Room summary API. Used for knocking over federation
-        msc3266_enabled = true;
-        # MSC4222: needed for syncv2 state_after. This allows clients to
-        # correctly track the state of the room.
-        msc4222_enabled = true;
-        # MSC4140: Delayed events are required for proper call participation signalling. If disabled it is very likely that you end up with stuck calls in Matrix rooms
-        msc4140_enabled = true;
+      global = {
+        server_name = "balsoft.eu";
+        port = [ 13748 ];
+        admins_list = [ "@balsoft:balsoft.eu" ];
+        well_known = {
+          client = "https://balsoft.eu";
+          server = "balsoft.eu:443";
+          support_page = "https://balsoft.eu";
+          support_role = "m.role.admin";
+          support_email = "balsoft@balsoft.eu";
+        };
+        matrix_rtc.foci = [
+          {
+            type = "livekit";
+            livekit_service_url = "https://livekit.balsoft.eu";
+          }
+        ];
       };
-
-      max_event_delay_duration = "24h";
     };
-    extraConfigFiles = [
-      config.secrets-envsubst.coturn.substituted
-      config.secrets-envsubst.matrix.substituted
-    ];
   };
-
-  services.postgresql.enable = true;
-  services.postgresql.package = pkgs.postgresql_15;
 
   services.mautrix-telegram = {
     enable = true;
@@ -88,8 +112,8 @@ in
         max_telegram_delete = 10;
         permissions = {
           "*" = "relaybot";
-          "@balsoft:balsoft.ru" = "admin";
-          "@lyona:balsoft.ru" = "full";
+          "@balsoft:balsoft.eu" = "admin";
+          "@lyona:balsoft.eu" = "full";
         };
         plaintext_highlights = true;
         startup_sync = true;
@@ -101,8 +125,8 @@ in
         };
       };
       homeserver = {
-        address = "https://matrix.balsoft.ru";
-        domain = "balsoft.ru";
+        address = "https://balsoft.eu";
+        domain = "balsoft.eu";
         verify_ssl = true;
       };
     };
@@ -131,7 +155,7 @@ in
       "as_token"
       "hs_token"
     ];
-    owner = "matrix-synapse";
+    owner = "matrix-continuwuity";
     template = builtins.toJSON {
       as_token = "$as_token";
       hs_token = "$hs_token";
@@ -140,13 +164,13 @@ in
         aliases = [
           {
             exclusive = true;
-            regex = "#tg_.+:balsoft.ru";
+            regex = "#tg_.+:balsoft.eu";
           }
         ];
         users = [
           {
             exclusive = true;
-            regex = "@tg_.+:balsoft.ru";
+            regex = "@tg_.+:balsoft.eu";
           }
         ];
       };
@@ -171,14 +195,12 @@ in
 
   users.groups.mautrix-telegram = { };
 
-  users.users.matrix-synapse.name = lib.mkForce "matrix-synapse";
-
   services.coturn = {
     enable = true;
     use-auth-secret = true;
     static-auth-secret-file = config.secrets.coturn.decrypted;
     no-tls = true;
-    realm = "balsoft.ru";
+    realm = "balsoft.eu";
     extraConfig = ''
       allowed-peer-ip=167.235.153.141
     '';
@@ -191,14 +213,14 @@ in
   };
   secrets-envsubst.coturn = {
     secrets = [ "shared_secret" ];
-    services = [ "matrix-synapse" ];
-    owner = "matrix-synapse:matrix-synapse";
+    services = [ "matrix-continuwuity" ];
+    owner = "matrix-continuwuity:matrix-continuwuity";
     template = builtins.toJSON { turn_shared_secret = "$shared_secret"; };
   };
   secrets-envsubst.matrix = {
     secrets = [ "registration_shared_secret" ];
-    services = [ "matrix-synapse" ];
-    owner = "matrix-synapse:matrix-synapse";
+    services = [ "matrix-continuwuity" ];
+    owner = "matrix-continuwuity:matrix-continuwuity";
     template = builtins.toJSON {
       registration_shared_secret = "$registration_shared_secret";
     };
@@ -213,7 +235,7 @@ in
   services.lk-jwt-service = {
     enable = true;
     # can be on the same virtualHost as synapse
-    livekitUrl = "wss://balsoft.ru/livekit/sfu";
+    livekitUrl = "wss://balsoft.eu/livekit/sfu";
     keyFile = livekitKeyFile;
   };
   # generate the key when needed
@@ -236,8 +258,8 @@ in
     unitConfig.ConditionPathExists = "!${livekitKeyFile}";
   };
   # restrict access to livekit room creation to a homeserver
-  systemd.services.lk-jwt-service.environment.LIVEKIT_FULL_ACCESS_HOMESERVERS = "balsoft.ru";
-  services.nginx.virtualHosts."balsoft.ru".locations = {
+  systemd.services.lk-jwt-service.environment.LIVEKIT_FULL_ACCESS_HOMESERVERS = "balsoft.eu";
+  services.nginx.virtualHosts."balsoft.eu".locations = {
     "^~ /livekit/jwt/" = {
       priority = 400;
       proxyPass = "http://[::1]:${toString config.services.lk-jwt-service.port}/";
