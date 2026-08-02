@@ -55,6 +55,5 @@
 
   environment.systemPackages = [ pkgs.ntfs3g ];
 
-  console.font = "${pkgs.notonoto-console}/share/fonts/truetype/notonoto-console/NOTONOTOConsole-Regular.ttf";
   console.useXkbConfig = true;
 }

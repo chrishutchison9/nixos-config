@@ -47,13 +47,6 @@ rec {
       };
     }).overrideAttrs
       (_: {
-
-        src = final.fetchFromGitHub {
-          owner = "mdellweg";
-          repo = "pass_secret_service";
-          rev = "fadc09be718ae1e507eeb8719f3a2ea23edb6d7a";
-          hash = "sha256-lrNU5bkG4/fMu5rDywfiI8vNHyBsMf/fiWIeEHug03c=";
-        };
         installCheckPhase = null;
         postInstall = ''
           mkdir -p $out/share/{dbus-1/services,xdg-desktop-portal/portals}
@@ -185,19 +178,14 @@ rec {
     final': prev': {
       pypass = prev'.pypass.overrideAttrs (
         o:
-        let
-          version = "f86cf0ba0e5cb6a1236ff16d8f238b92bc49c517";
-          sha256 = "sha256-PEPgWdsBjyHpgqPx2MNtYnn0wxI0KtlE+uCD7xO0pvE=";
-        in
         {
-          inherit version;
-
+          version = "0.2.1";
           src = final.fetchFromGitHub {
             owner = "nazarewk";
             # see https://github.com/aviau/python-pass/pull/34
             repo = "python-pass";
-            rev = version;
-            inherit sha256;
+            rev = "f86cf0ba0e5cb6a1236ff16d8f238b92bc49c517";
+            sha256 = "sha256-PEPgWdsBjyHpgqPx2MNtYnn0wxI0KtlE+uCD7xO0pvE=";
           };
           doInstallCheck = false;
           # Set absolute nix store paths to the executables that pypass uses
